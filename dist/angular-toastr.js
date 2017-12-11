@@ -16,6 +16,8 @@
 
     var containerDefer = $q.defer();
 
+    var _toastrBuffer = [];
+    
     var toast = {
       active: active,
       clear: clear,
@@ -152,40 +154,57 @@
       return containerDefer.promise;
     }
 
+    var _isLaunched = false;
+    
+    function processToastBuffer(action) {
+      if (_isLaunched || !action) {
+          return;
+      }
+      _isLaunched = true;
+      setInterval(action, 200);
+    }
+    
     function _notify(map) {
       var options = _getOptions();
-
-      if (shouldExit()) { return; }
-
       var newToast = createToast();
+      _toastrBuffer.push(newToast);
 
-      toasts.push(newToast);
+      processToastBuffer(function() {
 
-      if (ifMaxOpenedAndAutoDismiss()) {
-        var oldToasts = toasts.slice(0, (toasts.length - options.maxOpened));
-        for (var i = 0, len = oldToasts.length; i < len; i++) {
-          remove(oldToasts[i].toastId);
-        }
-      }
+          var myToast = _toastrBuffer.shift();
+          if (!myToast || shouldExit()) { return; }
 
-      if (maxOpenedNotReached()) {
-        newToast.open.resolve();
-      }
+          toasts.push(myToast);
 
-      newToast.open.promise.then(function() {
-        _createOrGetContainer(options).then(function() {
-          newToast.isOpened = true;
-          if (options.newestOnTop) {
-            $animate.enter(newToast.el, container).then(function() {
-              newToast.scope.init();
-            });
-          } else {
-            var sibling = container[0].lastChild ? angular.element(container[0].lastChild) : null;
-            $animate.enter(newToast.el, container, sibling).then(function() {
-              newToast.scope.init();
-            });
+          if (ifMaxOpenedAndAutoDismiss()) {
+              var oldToasts = toasts.slice(0, (toasts.length - options.maxOpened));
+              for (var i = 0, len = oldToasts.length; i < len; i++) {
+                  remove(oldToasts[i].toastId);
+              }
           }
-        });
+
+          if (maxOpenedNotReached()) {
+              myToast.open.resolve();
+          }
+
+          myToast.open.promise.then(function() {
+              _createOrGetContainer(options)
+                  .then(function() {
+                      myToast.isOpened = true;
+                      if (options.newestOnTop) {
+                          $animate.enter(myToast.el, container)
+                              .then(function() {
+                                  myToast.scope.init();
+                              });
+                      } else {
+                          var sibling = container[0].lastChild ? angular.element(container[0].lastChild) : null;
+                          $animate.enter(myToast.el, container, sibling)
+                              .then(function() {
+                                  myToast.scope.init();
+                              });
+                      }
+                  });
+          });
       });
 
       return newToast;
