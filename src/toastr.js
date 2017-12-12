@@ -161,7 +161,7 @@
           return;
       }
       _isLaunched = true;
-      setInterval(action, 200);
+      setInterval(action, 600);
     }
     
     function _notify(map) {
