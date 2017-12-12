@@ -161,7 +161,7 @@
           return;
       }
       _isLaunched = true;
-      setInterval(action, 200);
+      setInterval(action, 600);
     }
     
     function _notify(map) {
@@ -172,7 +172,12 @@
       processToastBuffer(function() {
 
           var myToast = _toastrBuffer.shift();
-          if (!myToast || shouldExit()) { return; }
+          if  (!myToast) {
+          	openToasts = {};
+          	return;
+          }
+          
+          if (shouldExit()) { return; }
 
           toasts.push(myToast);
 
