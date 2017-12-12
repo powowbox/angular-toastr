@@ -172,7 +172,12 @@
       processToastBuffer(function() {
 
           var myToast = _toastrBuffer.shift();
-          if (!myToast || shouldExit()) { return; }
+          if  (!myToast) {
+          	openToasts = {};
+          	return;
+          }
+          
+          if (shouldExit()) { return; }
 
           toasts.push(myToast);
 
